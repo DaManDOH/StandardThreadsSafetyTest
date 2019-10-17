@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.852
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StandardThreadsSafetyTest", "StandardThreadsSafetyTest.vcxproj", "{A3447629-EAAF-43B0-B1EB-205F9549A6D4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExecutionTimelineSim", "ExecutionTimelineSim\ExecutionTimelineSim.vcxproj", "{1A7844AA-DF86-408D-9F3F-E8B7AFF64D28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +17,10 @@ Global
 		{A3447629-EAAF-43B0-B1EB-205F9549A6D4}.Debug|x64.Build.0 = Debug|x64
 		{A3447629-EAAF-43B0-B1EB-205F9549A6D4}.Release|x64.ActiveCfg = Release|x64
 		{A3447629-EAAF-43B0-B1EB-205F9549A6D4}.Release|x64.Build.0 = Release|x64
+		{1A7844AA-DF86-408D-9F3F-E8B7AFF64D28}.Debug|x64.ActiveCfg = Debug|x64
+		{1A7844AA-DF86-408D-9F3F-E8B7AFF64D28}.Debug|x64.Build.0 = Debug|x64
+		{1A7844AA-DF86-408D-9F3F-E8B7AFF64D28}.Release|x64.ActiveCfg = Release|x64
+		{1A7844AA-DF86-408D-9F3F-E8B7AFF64D28}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
