@@ -15,12 +15,17 @@ template<typename T>
 class ConcurrentStack {
 
 private:
-	struct Node {
+	class Node {
+	public:
+		Node() = default;
+		~Node() = default;
+
 		T t;
 		std::shared_ptr<Node> pNext;
 	};
 
 	std::shared_ptr<Node> pHead;
+	std::atomic_ullong nNodeCount = 0ULL;
 
 	ConcurrentStack(ConcurrentStack &) = delete;
 	void operator=(ConcurrentStack &) = delete;
@@ -29,12 +34,12 @@ public:
 	ConcurrentStack() = default;
 	~ConcurrentStack() = default;
 
-	class reference {
+	class Reference {
 	private:
 		std::shared_ptr<Node> p;
 
 	public:
-		reference(std::shared_ptr<Node> p_)
+		Reference(std::shared_ptr<Node> p_)
 			: p{ p_ }
 		{ }
 
@@ -47,10 +52,6 @@ public:
 			assert(p != nullptr);
 			return &p->t;
 		}
-
-		Node const * get() const {
-			return p.get();
-		}
 	};
 
 	bool empty() const {
@@ -58,13 +59,7 @@ public:
 	}
 
 	size_t size() const {
-		auto p = std::atomic_load(&pHead);
-		size_t nRetVal = 0ULL;
-		while (p) {
-			++nRetVal;
-			p = p->pNext;
-		}
-		return nRetVal;
+		return nNodeCount;
 	}
 
 	auto find(T t) const {
@@ -73,11 +68,11 @@ public:
 		while (p && p->t != t) {
 			p = p->pNext;
 		}
-		return reference(std::move(p));
+		return Reference(std::move(p));
 	}
 
 	auto front() const {
-		return reference(std::atomic_load(&pHead));
+		return Reference(std::atomic_load(&pHead));
 	}
 
 	void push_front(T t) {
@@ -85,10 +80,12 @@ public:
 		p->t = t;
 		p->pNext = std::atomic_load(&pHead);
 		while (!std::atomic_compare_exchange_weak(&pHead, &p->pNext, p)) {}
+		++nNodeCount;
 	}
 
 	void pop_front() {
 		auto p = std::atomic_load(&pHead);
 		while (p && !std::atomic_compare_exchange_weak(&pHead, &p, p->pNext)) {}
+		--nNodeCount;
 	}
 };

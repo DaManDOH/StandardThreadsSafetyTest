@@ -2,54 +2,77 @@
 //
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <future>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "ConcurrentStack.h"
+//#include "ConcurrentStack.h"
 
 
-int const g_nThreadCount = 8;
-long long const g_nRecordsPerThread = 10'000LL;
+unsigned char const g_nThreadCount = 8;
 
 
 int main() {
-	long long nStackSize = g_nThreadCount * g_nRecordsPerThread;
-	ConcurrentStack<long long> oSUT;
+	using namespace std::chrono_literals;
 
-	for (long long i = 0; i < nStackSize; ++i) {
-		oSUT.push_front(i);
-	}
+	//for (long long nRecordsPerThread = 1LL; nRecordsPerThread < 500LL; ++nRecordsPerThread)
+	{
+		size_t nRecordsPerThread = 5'000'000ULL;
+		auto nStackSize = g_nThreadCount * nRecordsPerThread;
+		//	ConcurrentStack<long long> oSUT;
 
-	assert(oSUT.size() == nStackSize);
+		//	for (long long i = 0; i < nStackSize; ++i) {
+		//		oSUT.push_front(i);
+		//	}
 
-	std::vector<std::future<int>> vAllThreads;
+		//	assert(oSUT.size() == nStackSize);
 
-	for (int nThreadNum = 0; nThreadNum < g_nThreadCount; ++nThreadNum) {
-		vAllThreads.push_back(std::async(std::launch::async, [&oSUT, nThreadNum]() {
-			std::ofstream oTargetFile("./popped_by_thread_" + std::to_string(nThreadNum) + ".txt");
-			while (oSUT.front().get() != nullptr) {
-				auto nHeadVal = *oSUT.front();
-				oSUT.pop_front();
-				oTargetFile << nHeadVal << "\n";
-			}
-			return 0;
-		}));
-	}
-
-	while (true) {
-		if (std::all_of(vAllThreads.cbegin(), vAllThreads.cend(), [](std::future<int> const &oOneThread) {
-			using namespace std::chrono_literals;
-			auto status = oOneThread.wait_for(0s);
-			return status == std::future_status::ready;
-		})) {
-			break;
+		std::vector<long long> oSUT;
+		oSUT.reserve(nStackSize);
+		for (size_t i = 0ULL; i < nStackSize; ++i) {
+			oSUT.push_back(i);
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		std::vector<std::future<int>> vAllThreads;
+		for (int nThreadNum = 0; nThreadNum < g_nThreadCount; ++nThreadNum) {
+			//		vAllThreads.push_back(std::async(std::launch::async, [&oSUT, nThreadNum]() {
+			//			std::ofstream oTargetFile("./popped_by_thread_" + std::to_string(nThreadNum) + ".txt");
+			//			while (!oSUT.empty()) {
+			//				auto nHeadVal = *oSUT.front();
+			//				oSUT.pop_front();
+			//				oTargetFile << nHeadVal << "\n";
+			//			}
+			//			return 0;
+			//		}));
+			vAllThreads.push_back(std::async(std::launch::async, [&oSUT, nRecordsPerThread, nStackSize, nThreadNum]() {
+				std::ofstream oTargetFile("./thread_" + std::to_string(nThreadNum) + "_output.txt");
+				size_t nLoopNum = 0ULL;
+				size_t nTargetIndex = nThreadNum;
+				while (nTargetIndex < nStackSize) {
+					oTargetFile << oSUT[nTargetIndex] << "\n";
+					nTargetIndex = (++nLoopNum) * g_nThreadCount + nThreadNum;
+				}
+				return 0;
+			}));
+		}
+
+		while (true) {
+			if (std::all_of(vAllThreads.cbegin(), vAllThreads.cend(), [](std::future<int> const &oOneThread) {
+				auto status = oOneThread.wait_for(0s);
+				return status == std::future_status::ready;
+			})) {
+				break;
+			}
+			std::this_thread::sleep_for(500ms);
+		}
 	}
+
+
 
 	return 0;
 }
